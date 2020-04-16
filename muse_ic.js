@@ -9,7 +9,7 @@ const DJROLEENABLED = process.env.DJROLEENABLED || true
 const Discord = require('discord.js');
 const client = new Discord.Client();
 // import Exported functions
-const museic = require('./muse_exports.js')
+const muse_ic = require('./muse_exports.js')
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -36,13 +36,25 @@ client.on('message', message => {
 
         case `${PREFIX}play`:
             if(DJROLEENABLED){
-                if(isDJ){
-                    museic.play(args, message)
+                if(isDJ || isAdmin){
+                    muse_ic.play(args, message)
                 }else{
                     message.reply('You do not have the `' + DJROLE + '` role')
                 }
             }else{
-                museic.play(args, message)
+                muse_ic.play(args, message)
+            }
+            return
+        
+        case `${PREFIX}leave`:
+            if(DJROLEENABLED){
+                if(isDJ || isAdmin){
+                    muse_ic.leave(message);
+                }else{
+                    message.reply('You do not have the `' + DJROLE + '` role')
+                }
+            }else{
+                muse_ic.leave(message);
             }
             return
     }
