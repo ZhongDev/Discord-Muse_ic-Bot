@@ -4,12 +4,12 @@ const TOKEN = process.env.TOKEN
 const PREFIX = process.env.PREFIX || '_'
 const DJROLE = process.env.DJROLE || 'DJ'
 const ADMINROLE = process.env.ADMINROLE || 'Admin'
-const DJROLEENABLED = process.env.DJROLEENABLED || false
+const DJROLEENABLED = process.env.DJROLEENABLED || true
 // discord.js import
 const Discord = require('discord.js');
 const client = new Discord.Client();
-// ytdl import
-const ytdl = require('ytdl-core');
+// import Exported functions
+const museic = require('./muse_exports.js')
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -22,10 +22,14 @@ client.on('message', message => {
     const guildowner = message.channel.guild.ownerID
     const messageauthor = message.author.id
     const isGuildOwner = guildowner == messageauthor
-    const isDJ = message.member.roles.find(role => role.name === DJROLE)
-    const isAdmin = message.member.roles.find(role => role.name === ADMINROLE) || isGuildOwner
+    const isDJ = message.member.roles.cache.find(role => role.name === DJROLE)
+    const isAdmin = message.member.roles.cache.find(role => role.name === ADMINROLE) || isGuildOwner
 
     switch (command) {
+        case `${PREFIX}ping`:
+            message.channel.send('Pong!')
+            return
+
         case `${PREFIX}ping`:
             message.channel.send('Pong!')
             return
@@ -33,12 +37,12 @@ client.on('message', message => {
         case `${PREFIX}play`:
             if(DJROLEENABLED){
                 if(isDJ){
-                    message.channel.send('Playing ...')
+                    museic.play(args, message)
                 }else{
                     message.reply('You do not have the `' + DJROLE + '` role')
                 }
             }else{
-                message.channel.send('Playing ...')
+                museic.play(args, message)
             }
             return
     }
