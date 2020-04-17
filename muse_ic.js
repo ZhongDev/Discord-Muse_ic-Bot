@@ -24,6 +24,7 @@ client.on('message', message => {
     const isGuildOwner = guildowner == messageauthor
     const isDJ = message.member.roles.cache.find(role => role.name === DJROLE)
     const isAdmin = message.member.roles.cache.find(role => role.name === ADMINROLE) || isGuildOwner
+    const isPrivileged = isDJ || isAdmin
 
     switch (command) {
         case `${PREFIX}ping`:
@@ -35,20 +36,24 @@ client.on('message', message => {
             return
 
         case `${PREFIX}play`:
+            if(args.length == 0){
+                return message.reply('Please provide a track to play.')
+            }
             if(DJROLEENABLED){
-                if(isDJ || isAdmin){
-                    muse_ic.play(args, message)
+                if(isPrivileged){
+                    
+                    muse_ic.play(args, message, isPrivileged)
                 }else{
                     message.reply('You do not have the `' + DJROLE + '` role')
                 }
             }else{
-                muse_ic.play(args, message)
+                muse_ic.play(args, message, isPrivileged)
             }
             return
         
         case `${PREFIX}leave`:
             if(DJROLEENABLED){
-                if(isDJ || isAdmin){
+                if(isPrivileged){
                     muse_ic.leave(message);
                 }else{
                     message.reply('You do not have the `' + DJROLE + '` role')
@@ -57,6 +62,54 @@ client.on('message', message => {
                 muse_ic.leave(message);
             }
             return
+
+        case `${PREFIX}pause`:
+            if(DJROLEENABLED){
+                if(isPrivileged){
+                    muse_ic.pause(message);
+                }else{
+                    message.reply('You do not have the `' + DJROLE + '` role')
+                }
+            }else{
+                muse_ic.pause(message);
+            }
+            return
+
+        case `${PREFIX}resume`:
+            if(DJROLEENABLED){
+                if(isPrivileged){
+                    muse_ic.resume(message);
+                }else{
+                    message.reply('You do not have the `' + DJROLE + '` role')
+                }
+            }else{
+                muse_ic.resume(message);
+            }
+            return
+
+        case `${PREFIX}volume`:
+            if(DJROLEENABLED){
+                if(isPrivileged){
+                    muse_ic.volume(args, message);
+                }else{
+                    message.reply('You do not have the `' + DJROLE + '` role')
+                }
+            }else{
+                muse_ic.volume(args, message);
+            }
+            return
+        
+        //case `${PREFIX}seek`:
+        //    if(DJROLEENABLED){
+        //        if(isPrivileged){
+        //            muse_ic.seek(args, message);
+        //        }else{
+        //            message.reply('You do not have the `' + DJROLE + '` role')
+        //        }
+        //    }else{
+        //        muse_ic.seek(args, message);
+        //    }
+        //    return
     }
 });
 
