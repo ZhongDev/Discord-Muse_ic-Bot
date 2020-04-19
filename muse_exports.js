@@ -2,9 +2,11 @@
 require('dotenv').config()
 const YTAPI = process.env.YTAPI
 // ytdl import
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 // channel tracking
 var channels = {};
+// persistant info tracking
+var persistantinfo = {};
 
 class handler {
     static async play(args, message, isPrivileged){
@@ -17,6 +19,7 @@ class handler {
                     return message.reply('The bot is currently playing in another channel and you do not have privileges to move the bot.');
                 }
                 channels[message.channel.guild.id].destroyStream()
+                channels[message.channel.guild.id].deletePersistInfo()
             }
         }
         message.member.voice.channel.join()
@@ -70,6 +73,13 @@ class handler {
     }
 
     static async volume(args, message){
+        if( args.length < 1 ){
+            if(!(message.channel.guild.id in persistantinfo)){
+                return message.reply('There isn\'t anything playing right now.');
+            }
+            var currentVolume = persistantinfo[message.channel.guild.id].volume*100;
+            return message.reply('The current volume is ' + currentVolume  + '%');
+        }
         var newVolume = -1;
         try {
             newVolume = parseInt(args[0]);
@@ -95,15 +105,6 @@ class handler {
         channels[message.channel.guild.id].disconnect();
         return
     }
-
-    //static async seek(args, message){
-    //    if(args.length < 1){
-    //        return message.reply('Please provide a time to seek to in seconds.');
-    //    }
-    //    channels[message.channel.guild.id].seek(args[0]);
-    //    console.log(args[0])
-    //    return
-    //}
 }
 
 class channel {
@@ -114,30 +115,18 @@ class channel {
         this.stream = null;
         this.streamUrl = null;
         this.playing = false;
+        if(!(guildId in persistantinfo)){
+            persistantinfo[this.guildId] = {}
+            persistantinfo[this.guildId].volume = 1;
+            persistantinfo[this.guildId].queue = [];
+        }
     }
 
-    startStream(url){
+    async startStream(url){
         this.streamUrl = url;
-        this.stream = ytdl(this.streamUrl, { filter: 'audioonly' });
-        this.connection.play(this.stream);
+        this.stream = await ytdl(this.streamUrl, { filter: 'audioonly' });
+        this.connection.play(this.stream, {volume: Math.pow(persistantinfo[this.guildId].volume, 1.660964), type: 'opus'});
         this.playing = true;
-    }
-
-    //seek(time){
-    //    this.stopStream()
-    //    this.startStreamAt(time)
-    //}
-//
-    //startStreamAt(begin){
-    //    this.stream = ytdl(this.streamUrl, { bitrate: 96000, range: {start: begin*12000}, filter: 'audioonly' });
-    //    this.connection.play(this.stream);
-    //    this.playing = true;
-    //}
-
-    stopStream(){
-        this.stream.destroy();
-        this.stream = null;
-        this.playing = false;
     }
 
     updateVoiceChannel(voiceChannel) {
@@ -145,7 +134,8 @@ class channel {
     }
 
     updateVolume(newVolume){
-        this.connection.dispatcher.setVolumeLogarithmic(newVolume/100);
+        persistantinfo[this.guildId].volume = newVolume/100;
+        this.connection.dispatcher.setVolume(Math.pow(newVolume/100, 1.660964));
     }
 
     pause(){
@@ -161,6 +151,7 @@ class channel {
     disconnect(){
         this.connection.disconnect();
         this.stream.destroy();
+        this.deletePersistInfo();
         delete channels[this.guildId];
         return
     }
@@ -169,6 +160,10 @@ class channel {
         this.connection.dispatcher.pause();
         this.stream.destroy();
         return
+    }
+
+    deletePersistInfo(){
+        delete persistantinfo[this.guildId];
     }
   }
 

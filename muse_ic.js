@@ -98,18 +98,6 @@ client.on('message', message => {
                 muse_ic.volume(args, message);
             }
             return
-        
-        //case `${PREFIX}seek`:
-        //    if(DJROLEENABLED){
-        //        if(isPrivileged){
-        //            muse_ic.seek(args, message);
-        //        }else{
-        //            message.reply('You do not have the `' + DJROLE + '` role')
-        //        }
-        //    }else{
-        //        muse_ic.seek(args, message);
-        //    }
-        //    return
     }
 });
 
